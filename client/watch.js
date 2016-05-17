@@ -1,9 +1,6 @@
 var ytScriptLoaded = false;
-
 var ytApiReady = new ReactiveVar(false);
-
 var newContextDep = new Tracker.Dependency;
-
 var embedEventsSet =false;
 
 window.mainPlayer = {
@@ -145,7 +142,26 @@ window.mainPlayer = {
       default:
         return false
     }
-  }
+  },
+  getElapsedTime(){
+    switch(this.activeStreamSource){
+      case 'youtube':
+        if(this._youTubePlayer.getCurrentTime){
+          return this._youTubePlayer.getCurrentTime();
+        } else {
+          return 0;
+        }
+      //case 'ustream':
+      //  return
+      //case 'bambuser':
+      //  return
+      //case 'twitch':
+      //  return
+      default:
+        return false
+    }
+  },
+  activeStream: new ReactiveVar({})
 };
 
 Template.watch_page.onCreated(function () {
@@ -153,6 +169,8 @@ Template.watch_page.onCreated(function () {
     $.getScript('https://www.youtube.com/iframe_api', function () {});
     ytScriptLoaded = true;
   }
+  
+  Session.set('replayContext', false);
 
   this.mainStreamIFrameId = Random.id(8);
   Session.set('mainStreamIFrameId', this.mainStreamIFrameId);
@@ -194,8 +212,6 @@ Template.watch_page.onCreated(function () {
     if(FlowRouter.subsReady()){
       var stream = Deepstreams.findOne({shortId: that.data.shortId()}, {reactive: false});
       var user = Meteor.user();
-
-
       if(!stream){
         setStatusCode(404);
         return BlazeLayout.render("stream_not_found");
@@ -313,8 +329,6 @@ Template.watch_page.onCreated(function () {
 
   });
 
-
-
   this.activeStream = new ReactiveVar();
   this.userControlledActiveStreamId = new ReactiveVar();
 
@@ -336,12 +350,11 @@ Template.watch_page.onCreated(function () {
       Tracker.nonreactive(function(){
         activeStream = that.activeStream.get();
       });
-
       if(activeStream && newActiveStream && activeStream.source === newActiveStream.source && activeStream._id !== newActiveStream._id){
         Session.set('removeMainStream', true);
         Meteor.setTimeout(() => Session.set('removeMainStream', false), 0);
       }
-
+      
       that.activeStream.set(newActiveStream);
     }
   });
@@ -375,10 +388,17 @@ Template.watch_page.onRendered(function(){
   this.mainPlayerYTApiActivated = false;
   this.mainPlayerUSApiActivated = false;
   
+  this.checkTime = Meteor.setInterval(()=>{
+    if(mainPlayer && mainPlayer.getElapsedTime){
+      Session.set('currentTimeElapsed', mainPlayer.getElapsedTime());
+    }
+  }.bind(this),4000);
+  
   // activate jsAPIs for main stream
   this.autorun(function(){
     if(ytApiReady.get() && FlowRouter.subsReady()){
       var activeStream = that.activeStream.get();
+      mainPlayer.activeStream.set(that.activeStream.get());
       if(!activeStream){
         return
       }
@@ -520,6 +540,8 @@ Template.watch_page.onDestroyed(function () {
   if(mainPlayer){
     mainPlayer.activeStreamSource = null;
   }
+  Session.set('replayContext', false)
+  Meteor.clearInterval(this.checkTime);
 });
 
 
@@ -891,6 +913,14 @@ Template.watch_page.events({
   'click .curator-card-create' (e, t){
     analytics.track('Click curator card create', trackingInfoFromPage());
   },
+  'click .curator-card-replay' (e, t){
+    if(Session.get("replayContext")){
+      Session.set("replayContext", false);
+    } else {
+      Session.set("replayContext", true);
+    }
+    analytics.track('Click curator card replay context', trackingInfoFromPage());
+  },
   'click .about-deepstream-embed, click .deepstream-logo-embed' (e, t){
     Session.set('showDeepstreamAboutOverlay', true);
   },
@@ -946,6 +976,9 @@ Template.stream_li.events({
 });
 
 Template.context_browser_area.helpers({
+  orderedContext (){
+    return this.orderedContext(Session.get("replayContext"))
+  },
   showShowSuggestionsButton (){
     return Session.get('curateMode') && this.hasPendingSuggestions();
   },
@@ -1035,6 +1068,22 @@ Template.context_browser.onRendered(function() {
 Template.context_browser.helpers({
   mediaTypeForDisplay (){
     return pluralizeMediaType(Session.get('mediaDataType') || Session.get('previousMediaDataType')).toUpperCase();
+  },
+  replayAvailable(){
+    console.log(mainPlayer.activeStream.get());
+    
+    if(mainPlayer.activeStream.get().source === "youtube" && !mainPlayer.activeStream.get().live){
+      return true;
+    } else {
+      return false;
+    }
+  },
+  replayContextOn(){
+    if(Session.get("replayContext")){
+      return true;
+    } else {
+      return false;
+    }
   },
   soloSidebarContextMode (){
     var currentContext = getCurrentContext();
@@ -1157,6 +1206,27 @@ Template.solo_context_section.helpers({
   }
 });
 Template.list_item_context_section.helpers(horizontalBlockHelpers);
+Template.list_item_context_section.helpers({
+  showContext(){
+    if(Session.get("replayContext") === true){
+      if(Session.get("curateMode") === true){
+        return true;
+      }
+      if(!this.videoMarker){
+        return true;
+      }
+      if(!Session.get("currentTimeElapsed")){
+        return false;
+      }
+      if(parseFloat(Session.get("currentTimeElapsed")) < parseFloat(this.videoMarker)){
+        return false;
+      }
+      return true;
+    } else {
+      return true;
+    }
+  },
+});
 
 Template.title_description_overlay.onCreated(function(){
   this.titleLength = new ReactiveVar(this.title ? this.title.length : 0);

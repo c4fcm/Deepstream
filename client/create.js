@@ -115,6 +115,9 @@ window.addContext = function(contextBlock) { // add or suggest
   if (user = Meteor.user()) {
     contextBlock.authorId = user._id;
     contextBlock.rank = 0; // places above existing ranked context
+    if(mainPlayer.getElapsedTime()){
+      contextBlock.videoMarker = mainPlayer.getElapsedTime(); 
+    }
   } else {
     notifyInfo('Please log in to suggest content');
     Session.set('signingIn', true);

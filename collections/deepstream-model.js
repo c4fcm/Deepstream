@@ -42,11 +42,14 @@ Deepstream = (function() {
     return _.pluck(this.orderedInternalContext(), '_id');
   };
 
-  Deepstream.prototype.orderedContext = function() {
+  Deepstream.prototype.orderedContext = function(sortByVideoMarker) {
     var that = this;
-        return _.sortBy(ContextBlocks.find({streamShortId: this.shortId}).fetch(), function(e){
-      return that.contextBlockSortFunction(e)
-    });
+    var sortedBlocks =  _.sortBy(ContextBlocks.find({streamShortId: this.shortId}).fetch(), function(e){return that.contextBlockSortFunction(e)});
+    if(sortByVideoMarker){
+      sortedBlocks = _.sortBy(sortedBlocks, function(block){ return parseFloat(block.videoMarker)*-1; });
+    }
+    return sortedBlocks;
+    
   };
 
   Deepstream.prototype.internalContextOfType = function(type) {

@@ -644,7 +644,6 @@
         <!--<div class="top-bar"></div>-->
       {{/if}}
       <div class="context-area list-mode {{#if soloSidebarContextMode}}hide{{/if}}">
-        
         {{#each contextBlocks}}
           {{> list_item_context_section}}
         {{/each}}
@@ -666,6 +665,11 @@
               <center>
                 <button class="curator-card-like favorite-button {{#if userFavorited}}unfavorite{{else}}favorite{{/if}}">{{> favorite_icon}} Show some love</button>
               </center>
+              {{#if replayAvailable}}
+              <center>
+                <button class="curator-card-replay {{#if replayContextOn}}replay{{/if}}">{{> replay_icon}} Replay Context</button>
+              </center>
+              {{/if}}
               <center>
                 <button class="curator-card-create create">{{> create_icon}} Make your own</button>
               </center>
@@ -731,7 +735,7 @@
 </template>
 
 <template name="list_item_context_section">
-  <div class="list-item-context-plus-annotation" data-context-id="{{_id}}">
+  <div class="list-item-context-plus-annotation" data-context-id="{{_id}}" style="{{#unless showContext}} display:none;{{/unless}}">
     <div class="narrative-section context-section list-item-context-section {{#if type}}{{type}}-card{{/if}} {{#if hasSoloMode}}isClickable{{/if}}" data-context-id="{{_id}}">
       <div class="clickable">
         <div class="provider">{{#if providerIconUrl}}<img class="provider-image" src="{{providerIconUrl}}"/>{{/if}}{{providerName}}</div>

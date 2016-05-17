@@ -18,6 +18,10 @@ ContextBlocks._ensureIndex({
 });
 
 ContextBlocks._ensureIndex({
+  videoMarker: 1
+});
+
+ContextBlocks._ensureIndex({
   deleted: 1
 });
 

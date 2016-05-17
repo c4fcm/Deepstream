@@ -1184,6 +1184,23 @@
         margin-right: 10px;
       }
     }
+    &.curator-card-replay{
+      background-color: #428bca;
+      &:hover{
+        .fg {
+          fill: #AC00D8;
+        }
+      }
+      &.replay{
+        .fg {
+          fill: #AC00D8;
+        }
+      }
+      svg {
+        width: 12px;
+        margin-right: 10px;
+      }
+    }
     &.curator-card-create{
       background-color: #529900;
       svg {

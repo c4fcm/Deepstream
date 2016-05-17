@@ -352,6 +352,10 @@ Schema.ContextBlocks = new SimpleSchema({
   addedAt: {
     type: Date
   },
+  videoMarker: {
+    type: String,
+    optional: true
+  },
   deleted: {
     type: Boolean,
     optional: true
