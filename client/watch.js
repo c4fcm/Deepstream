@@ -387,13 +387,13 @@ Template.watch_page.onRendered(function(){
 
   this.mainPlayerYTApiActivated = false;
   this.mainPlayerUSApiActivated = false;
-  
-  this.checkTime = Meteor.setInterval(()=>{
+
+  this.checkTime = setInterval(() => {
     if(mainPlayer && mainPlayer.getElapsedTime){
       Session.set('currentTimeElapsed', mainPlayer.getElapsedTime());
     }
-  }.bind(this),4000);
-  
+  }, 4000);
+
   // activate jsAPIs for main stream
   this.autorun(function(){
     if(ytApiReady.get() && FlowRouter.subsReady()){
