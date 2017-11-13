@@ -9,6 +9,7 @@ If you don't have it installed, `./start` will guide you through that process.
 
 To reset the database, run: `./reset`
 
+Note that settings.json requires your own API keys to various services if you want to enable all of Deepstream's features.
 
 ## Hosting Deepstream
 
